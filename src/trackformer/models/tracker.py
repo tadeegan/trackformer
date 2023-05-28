@@ -34,6 +34,8 @@ class Tracker:
         self.prev_frame_dist = tracker_cfg['prev_frame_dist']
         self.steps_termination = tracker_cfg['steps_termination']
 
+        self.debug_outputs = {}
+
         if self.generate_attention_maps:
             assert hasattr(self.obj_detector.transformer.decoder.layers[-1], 'multihead_attn'), 'Generation of attention maps not possible for deformable DETR.'
 
@@ -267,6 +269,7 @@ class Tracker:
         """This function should be called every timestep to perform tracking with a blob
         containing the image information.
         """
+        print(f'self.frame_index: {self.frame_index}')
         self.inactive_tracks = [
             t for t in self.inactive_tracks
             if t.has_positive_area() and t.count_inactive <= self.inactive_patience
@@ -286,6 +289,7 @@ class Tracker:
         target = None
         num_prev_track = len(self.tracks + self.inactive_tracks)
         if num_prev_track:
+            print(f"num prev tracks: {num_prev_track}")
             track_query_boxes = torch.stack([
                 t.pos for t in self.tracks + self.inactive_tracks], dim=0).cpu()
 
@@ -297,6 +301,7 @@ class Tracker:
             target = {'track_query_boxes': track_query_boxes}
 
             target['image_id'] = torch.tensor([1]).to(self.device)
+            # target['prev_target'] = None
             target['track_query_hs_embeds'] = torch.stack([
                 t.hs_embed[-1] for t in self.tracks + self.inactive_tracks], dim=0)
 
@@ -304,11 +309,14 @@ class Tracker:
             target = [target]
 
         outputs, _, features, _, _ = self.obj_detector(img, target, self._prev_features[0])
+        self.debug_outputs['outputs'] = outputs
+        self.debug_outputs['features'] = features
 
         hs_embeds = outputs['hs_embed'][0]
 
         results = self.obj_detector_post['bbox'](outputs, orig_size)
         if "segm" in self.obj_detector_post:
+            raise NotImplementedError
             results = self.obj_detector_post['segm'](
                 results,
                 outputs,
@@ -317,8 +325,10 @@ class Tracker:
                 return_probs=True)
         result = results[0]
 
-        if 'masks' in result:
-            result['masks'] = result['masks'].squeeze(dim=1)
+        self.debug_outputs['obj_detector_post'] = result
+
+        # if 'masks' in result:
+        #     result['masks'] = result['masks'].squeeze(dim=1)
 
         if self.obj_detector.overflow_boxes:
             boxes = result['boxes']
@@ -426,6 +436,7 @@ class Tracker:
             result['labels'][-self.num_object_queries:] == 0)
 
         new_det_boxes = new_det_boxes[new_det_keep]
+        # print(f'new_det_boxes {new_det_boxes}')
         new_det_scores = new_det_scores[new_det_keep]
         new_det_hs_embeds = new_det_hs_embeds[new_det_keep]
         new_det_indices = new_det_keep.float().nonzero()
@@ -436,17 +447,17 @@ class Tracker:
             new_det_attention_maps = new_det_attention_maps[new_det_keep]
 
         # public detection
-        public_detections_mask = self.public_detections_mask(
-            new_det_boxes, blob['dets'][0])
+        # public_detections_mask = self.public_detections_mask(
+        #     new_det_boxes, blob['dets'][0])
 
-        new_det_boxes = new_det_boxes[public_detections_mask]
-        new_det_scores = new_det_scores[public_detections_mask]
-        new_det_hs_embeds = new_det_hs_embeds[public_detections_mask]
-        new_det_indices = new_det_indices[public_detections_mask]
-        if 'masks' in result:
-            new_det_masks = new_det_masks[public_detections_mask]
-        if self.generate_attention_maps:
-            new_det_attention_maps = new_det_attention_maps[public_detections_mask]
+        # new_det_boxes = new_det_boxes[public_detections_mask]
+        # new_det_scores = new_det_scores[public_detections_mask]
+        # new_det_hs_embeds = new_det_hs_embeds[public_detections_mask]
+        # new_det_indices = new_det_indices[public_detections_mask]
+        # if 'masks' in result:
+        #     new_det_masks = new_det_masks[public_detections_mask]
+        # if self.generate_attention_maps:
+        #     new_det_attention_maps = new_det_attention_maps[public_detections_mask]
 
         # reid
         reid_mask = self.reid(

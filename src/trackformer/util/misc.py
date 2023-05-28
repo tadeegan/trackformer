@@ -19,11 +19,7 @@ import torch.nn.functional as F
 # needed due to empty tensor bug in pytorch and torchvision 0.5
 import torchvision
 from torch import Tensor
-from visdom import Visdom
-
-if float(torchvision.__version__[:3]) < 0.7:
-    from torchvision.ops import _new_empty_tensor
-    from torchvision.ops.misc import _output_size
+# from visdom import Visdom
 
 
 class SmoothedValue(object):
@@ -305,9 +301,12 @@ def _max_by_axis(the_list):
             maxes[index] = max(maxes[index], item)
     return maxes
 
-
 def nested_tensor_from_tensor_list(tensor_list: List[Tensor]):
-    # TODO make this more general
+    """
+    Args:
+        tensor_list (list[Tensor])
+    """
+    # print(f'numdium: {tensor_list.ndim}')
     if tensor_list[0].ndim == 3:
         # TODO make it support different-sized images
         max_size = _max_by_axis([list(img.shape) for img in tensor_list])
@@ -385,8 +384,8 @@ def setup_for_distributed(is_master):
             pass
         def images(*args, **kwargs):
             pass
-        Visdom.line = line
-        Visdom.images = images
+        # Visdom.line = line
+        # Visdom.images = images
 
 
 def is_dist_avail_and_initialized():
@@ -470,17 +469,7 @@ def interpolate(input, size=None, scale_factor=None, mode="nearest", align_corne
     This will eventually be supported natively by PyTorch, and this
     class can go away.
     """
-    if float(torchvision.__version__[:3]) < 0.7:
-        if input.numel() > 0:
-            return torch.nn.functional.interpolate(
-                input, size, scale_factor, mode, align_corners
-            )
-
-        output_shape = _output_size(2, input, size, scale_factor)
-        output_shape = list(input.shape[:-2]) + list(output_shape)
-        return _new_empty_tensor(input, output_shape)
-    else:
-        return torchvision.ops.misc.interpolate(input, size, scale_factor, mode, align_corners)
+    return torchvision.ops.misc.interpolate(input, size, scale_factor, mode, align_corners)
 
 
 class DistributedWeightedSampler(torch.utils.data.DistributedSampler):

@@ -60,6 +60,7 @@ def build_model(args):
             if args.masks:
                 model = DeformableDETRSegmTracking(mask_kwargs, tracking_kwargs, detr_kwargs)
             else:
+                print('Making DeformableDETRTracking!!')
                 model = DeformableDETRTracking(tracking_kwargs, detr_kwargs)
         else:
             if args.masks:

@@ -1,0 +1,36 @@
+!!python/object/new:sacred.config.custom_containers.ReadOnlyDict
+dictitems:
+  data_root_dir: data
+  dataset_name: MOT17-ALL-ALL
+  frame_range: !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
+    dictitems:
+      end: 1.0
+      start: 0.0
+    state:
+      message: The configuration is read-only in a captured function!
+  generate_attention_maps: false
+  interpolate: false
+  load_results_dir: null
+  obj_detect_checkpoint_file: /storage/user/meinhard/fair_track/models/mot_mot17_train_coco_pretrained_num_queries_500_batch_size=2_num_gpus_7_num_classes_20_AP_det_overflow_boxes_True_prev_frame_rnd_augs_0_2_uniform_false_negative_prob_multi_frame_hidden_dim_288_sep_encoders_batch_queries_lr_drop_10_resume_class/checkpoint_epoch_50.pth
+  output_dir: /storage/user/meinhard/fair_track/models/mot_mot17_train_coco_pretrained_num_queries_500_batch_size=2_num_gpus_7_num_classes_20_AP_det_overflow_boxes_True_prev_frame_rnd_augs_0_2_uniform_false_negative_prob_multi_frame_hidden_dim_288_sep_encoders_batch_queries_lr_drop_10_resume_class/track_epoch_50_public_det_min_iou_0_5
+  seed: 666
+  tracker_cfg: !!python/object/new:sacred.config.custom_containers.ReadOnlyDict
+    dictitems:
+      detection_nms_thresh: 0.0
+      detection_obj_score_thresh: 0.4
+      inactive_patience: 5
+      prev_frame_dist: 1
+      public_detections: min_iou_0_5
+      reid_greedy_matching: false
+      reid_score_thresh: 0.4
+      reid_sim_only: false
+      reid_sim_threshold: 0.0
+      steps_termination: 1
+      track_nms_thresh: 0.9
+      track_obj_score_thresh: 0.4
+    state:
+      message: The configuration is read-only in a captured function!
+  verbose: false
+  write_images: false
+state:
+  message: The configuration is read-only in a captured function!

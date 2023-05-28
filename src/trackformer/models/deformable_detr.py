@@ -122,7 +122,7 @@ class DeformableDETR(DETR):
     #     return [self.hidden_dim, ] * num_backbone_outs
 
     def forward(self, samples: NestedTensor, targets: list = None, prev_features=None):
-        """ The forward expects a NestedTensor, which consists of:
+        """The forward expects a NestedTensor, which consists of:
                - samples.tensors: batched images, of shape [batch_size x 3 x H x W]
                - samples.mask: a binary mask of shape [batch_size x H x W], containing 1 on padded pixels
 
@@ -297,7 +297,7 @@ class DeformablePostProcess(PostProcess):
         """
         out_logits, out_bbox = outputs['pred_logits'], outputs['pred_boxes']
 
-        assert len(out_logits) == len(target_sizes)
+        assert len(out_logits) == len(target_sizes), f"got {len(out_logits)} outputs but {len(target_sizes)} targets"
         assert target_sizes.shape[1] == 2
 
         prob = out_logits.sigmoid()
@@ -318,9 +318,9 @@ class DeformablePostProcess(PostProcess):
         boxes = box_ops.box_cxcywh_to_xyxy(out_bbox)
 
         # and from relative [0, 1] to absolute [0, height] coordinates
-        img_h, img_w = target_sizes.unbind(1)
-        scale_fct = torch.stack([img_w, img_h, img_w, img_h], dim=1)
-        boxes = boxes * scale_fct[:, None, :]
+        # img_h, img_w = 100, 200
+        # scale_fct = torch.stack(torch.tensor([img_w, img_h, img_w, img_h]), dim=1)
+        boxes = boxes 
 
         results = [
             {'scores': s, 'scores_no_object': 1 - s, 'labels': l, 'boxes': b}

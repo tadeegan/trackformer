@@ -35,6 +35,7 @@ class DETRTrackingBase(nn.Module):
         """Sets the module in tracking mode."""
         self.eval()
         self._tracking = True
+        print(f'Setting tracking=True training={self.training}')
 
     def add_track_queries_to_targets(self, targets, prev_indices, prev_out, add_false_pos=True):
         device = prev_out['pred_boxes'].device
@@ -217,11 +218,12 @@ class DETRTrackingBase(nn.Module):
         #     target['track_queries_placeholder_mask'][:num_add] = True
 
     def forward(self, samples: NestedTensor, targets: list = None, prev_features=None):
+        print(targets)
         if targets is not None and not self._tracking:
-            prev_targets = [target['prev_target'] for target in targets]
 
             # if self.training and random.uniform(0, 1) < 0.5:
             if self.training:
+                prev_targets = [target['prev_target'] for target in targets]
             # if True:
                 backprop_context = torch.no_grad
                 if self._backprop_prev_frame:
@@ -272,6 +274,7 @@ class DETRTrackingBase(nn.Module):
                     target['track_query_boxes'] = torch.zeros(0, 4).to(device)
                     target['track_query_match_ids'] = torch.tensor([]).long().to(device)
 
+        # print(samples)
         out, targets, features, memory, hs  = super().forward(samples, targets, prev_features)
 
         return out, targets, features, memory, hs
